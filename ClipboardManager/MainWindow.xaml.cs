@@ -270,6 +270,76 @@ public partial class MainWindow : Window
         System.Windows.Forms.SendKeys.SendWait("^v");
     }
 
+    /// <summary>
+    /// Ao entrar em modo de edição, foca a caixa e seleciona o texto,
+    /// para o usuário já poder digitar o novo nome.
+    /// </summary>
+    private void NameTextBox_IsVisibleChanged(
+        object sender,
+        DependencyPropertyChangedEventArgs e
+    )
+    {
+        if (sender is not System.Windows.Controls.TextBox textBox || e.NewValue is not true)
+        {
+            return;
+        }
+
+        // Adiado até o layout terminar; antes disso o Focus() não tem efeito.
+        Dispatcher.BeginInvoke(
+            System.Windows.Threading.DispatcherPriority.Input,
+            () =>
+            {
+                textBox.Focus();
+                textBox.SelectAll();
+            }
+        );
+    }
+
+    private void NameTextBox_PreviewKeyDown(
+        object sender,
+        System.Windows.Input.KeyEventArgs e
+    )
+    {
+        if (sender is not FrameworkElement { DataContext: ClipboardItemViewModel item })
+        {
+            return;
+        }
+
+        if (e.Key == Key.Enter)
+        {
+            _viewModel.CommitRename(item);
+
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            // Tratado aqui (Preview) para o Esc não chegar ao OnKeyDown da
+            // janela, que a esconderia.
+            _viewModel.CancelRename(item);
+
+            e.Handled = true;
+        }
+    }
+
+    private void NameTextBox_LostKeyboardFocus(
+        object sender,
+        KeyboardFocusChangedEventArgs e
+    )
+    {
+        if (sender is FrameworkElement { DataContext: ClipboardItemViewModel item })
+        {
+            _viewModel.CommitRename(item);
+        }
+    }
+
+    private void ArrowButtons_MouseLeftButtonDown(
+        object sender,
+        MouseButtonEventArgs e
+    )
+    {
+        e.Handled = true;
+    }
+
     private void ExitMenuItem_Click(
         object? sender,
         EventArgs e
@@ -343,7 +413,8 @@ public partial class MainWindow : Window
 
     protected override void OnKeyDown(System.Windows.Input.KeyEventArgs e)
     {
-        if (e.Key == Key.Escape)
+        // e.Handled: o Esc já foi usado para cancelar a edição de um nome.
+        if (e.Key == Key.Escape && !e.Handled)
         {
             Hide();
 
@@ -368,6 +439,9 @@ public partial class MainWindow : Window
         EventArgs e
     )
     {
+        // Ao trocar de janela no meio da edição, o nome digitado é salvo.
+        _viewModel.CommitPendingRename();
+
         Hide();
     }
 

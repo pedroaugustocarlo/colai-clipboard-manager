@@ -21,6 +21,12 @@ public class ClipboardItem
     public long SortOrder { get; set; }
 
     /// <summary>
+    /// Nome opcional dado pelo usuário. Quando preenchido, é exibido na
+    /// listagem no lugar do conteúdo.
+    /// </summary>
+    public string? Name { get; set; }
+
+    /// <summary>
     /// Indica a quantidade de caracteres do conteúdo.
     /// </summary>
     public int ContentLength => Content.Length;

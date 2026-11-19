@@ -11,7 +11,7 @@ public static class AppInfo
 
     public const string FullName = "Colaí - Clipboard Manager";
 
-    public const string Version = "1.0.0";
+    public const string Version = "2.0.0";
 
     /// <summary>
     /// Nome do executável publicado (sem acento/extensão — vira "ExecutableName.exe").

@@ -72,6 +72,42 @@ public class ClipboardHistoryService
     }
 
     /// <summary>
+    /// Tamanho máximo do nome de um item.
+    /// </summary>
+    public const int MaxNameLength = 60;
+
+    /// <summary>
+    /// Define o nome de um item. Nome vazio ou só com espaços remove o nome.
+    /// Retorna o nome efetivamente salvo (ou null).
+    /// </summary>
+    public string? RenameItem(long id, string? name)
+    {
+        var normalized = name?.Trim();
+
+        if (string.IsNullOrEmpty(normalized))
+        {
+            normalized = null;
+        }
+        else if (normalized.Length > MaxNameLength)
+        {
+            normalized = normalized[..MaxNameLength];
+        }
+
+        _repository.SetName(id, normalized);
+
+        return normalized;
+    }
+
+    /// <summary>
+    /// Troca a posição do item com o vizinho de cima ou de baixo.
+    /// Retorna false se o item já estiver no limite da lista.
+    /// </summary>
+    public bool MoveItem(long id, MoveDirection direction)
+    {
+        return _repository.Move(id, direction);
+    }
+
+    /// <summary>
     /// Remove um item do histórico.
     /// </summary>
     public void DeleteItem(long id)

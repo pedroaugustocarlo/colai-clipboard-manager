@@ -41,11 +41,43 @@ public class DatabaseService
                 Content     TEXT NOT NULL,
                 CreatedAt   TEXT NOT NULL,
                 IsPinned    INTEGER NOT NULL DEFAULT 0,
-                SortOrder   INTEGER NOT NULL
+                SortOrder   INTEGER NOT NULL,
+                Name        TEXT NULL
             );
         ";
 
         command.ExecuteNonQuery();
+
+        AddColumnIfMissing(connection, "ClipboardItem", "Name", "TEXT NULL");
+    }
+
+    /// <summary>
+    /// Migração simples para bancos criados por versões anteriores:
+    /// CREATE TABLE IF NOT EXISTS não altera uma tabela já existente.
+    /// </summary>
+    private static void AddColumnIfMissing(
+        SqliteConnection connection,
+        string table,
+        string column,
+        string definition
+    )
+    {
+        using var checkCommand = connection.CreateCommand();
+
+        checkCommand.CommandText = $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name = $column;";
+
+        checkCommand.Parameters.AddWithValue("$column", column);
+
+        if (Convert.ToInt64(checkCommand.ExecuteScalar()) > 0)
+        {
+            return;
+        }
+
+        using var alterCommand = connection.CreateCommand();
+
+        alterCommand.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {definition};";
+
+        alterCommand.ExecuteNonQuery();
     }
 
     /// <summary>
